@@ -2,9 +2,7 @@
 
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, Input, Button } from '@/components/ui'
 import { useWizardStore } from '@/store/wizard-store'
 import { Receipt, ArrowLeft, ArrowRight, CheckCircle2 } from 'lucide-react'
 import { cn } from '@/lib/cn'

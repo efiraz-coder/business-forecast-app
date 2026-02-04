@@ -2,10 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, Input, Button, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui'
 import { useWizardStore, Product } from '@/store/wizard-store'
 import { Package, Plus, Trash2, ArrowLeft, ArrowRight, Pencil } from 'lucide-react'
 

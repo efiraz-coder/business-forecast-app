@@ -2,9 +2,7 @@
 
 import { useMemo } from 'react'
 import Link from 'next/link'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Card, CardHeader, CardTitle, CardContent, Button, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui'
 import { useWizardStore } from '@/store/wizard-store'
 import { 
   TrendingUp, 

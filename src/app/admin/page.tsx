@@ -3,9 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Card, CardHeader, CardTitle, CardContent, Button, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui'
 import { Shield, Users, Eye, Trash2, RefreshCw, AlertTriangle, Mail } from 'lucide-react'
 import Link from 'next/link'
 

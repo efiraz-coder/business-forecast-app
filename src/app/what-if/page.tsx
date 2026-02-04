@@ -2,9 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Slider } from '@/components/ui/slider'
+import { Card, CardHeader, CardTitle, CardContent, Button, Slider } from '@/components/ui'
 import { useWizardStore } from '@/store/wizard-store'
 import { 
   Sliders, 

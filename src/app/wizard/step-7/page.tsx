@@ -2,11 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, Input, Button, Checkbox, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui'
 import { useWizardStore } from '@/store/wizard-store'
 import { Megaphone, ArrowLeft, ArrowRight, Wand2, CheckCircle2 } from 'lucide-react'
 

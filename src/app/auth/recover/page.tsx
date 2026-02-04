@@ -3,9 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, Input, Button } from '@/components/ui'
 import { KeyRound, BarChart3, AlertCircle, CheckCircle, Mail } from 'lucide-react'
 
 export default function RecoverPage() {
