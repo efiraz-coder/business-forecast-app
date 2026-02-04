@@ -1,0 +1,280 @@
+// תכנון כלכלי מבוסס דרייברים - Prisma Schema
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL") // for migrations
+}
+
+// ===========================================
+// משתמשים והרשאות
+// ===========================================
+
+model User {
+  id                    String   @id @default(cuid())
+  username              String   @unique
+  password              String   // hashed password
+  businessName          String
+  role                  String   @default("user") // user | admin
+  
+  // שאלות ביטחון
+  securityQuestion1     String   // שם בית ספר יסודי
+  securityAnswer1       String   // תשובה (hashed)
+  securityQuestion2     String   // שם חיית מחמד
+  securityAnswer2       String   // תשובה (hashed)
+  
+  // שחזור סיסמה (לאדמין)
+  recoveryEmail         String?  // כתובת מייל לשחזור - מוצפנת
+  recoveryEmailHash     String?  // hash לאימות
+  tempPassword          String?  // סיסמה זמנית
+  tempPasswordExpiry    DateTime? // תוקף סיסמה זמנית
+  isEmailVerified       Boolean  @default(false)
+  
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  business              Business?
+}
+
+model Advisor {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  businesses AdvisorBusiness[]
+}
+
+model AdvisorBusiness {
+  id         String   @id @default(cuid())
+  advisorId  String
+  businessId String
+  role       String   @default("owner")
+  createdAt  DateTime @default(now())
+
+  advisor  Advisor  @relation(fields: [advisorId], references: [id], onDelete: Cascade)
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@unique([advisorId, businessId])
+}
+
+// ===========================================
+// שכבה 1: ליבת המודל
+// ===========================================
+
+// מסך 1: פרטי עסק
+model Business {
+  id            String   @id @default(cuid())
+  userId        String   @unique // קשר לבעל העסק
+  name          String
+  industry      String   // services | retail | manufacturing | digital | other
+  startDate     DateTime
+  openingBalance Float   @default(0) // יתרת פתיחה בבנק
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  user              User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  advisors          AdvisorBusiness[]
+  products          Product[]
+  headcountRoles    HeadcountRole[]
+  fixedExpenses     FixedExpense[]
+  marketingBudgets  MarketingBudget[]
+  financingItems    FinancingItem[]
+  forecastResults   ForecastResult[]
+  wizardProgress    WizardProgress?
+}
+
+// מסך 2: מוצרים/שירותים
+model Product {
+  id              String   @id @default(cuid())
+  businessId      String
+  name            String
+  type            String   // service | physical | digital
+  price           Float    // מחיר ממוצע
+  variableCostRate Float   @default(0.3) // אחוז עלות משתנה (לשירותים/דיגיטל)
+  // ניהול מלאי (רק למוצרים פיזיים)
+  hasInventory    Boolean  @default(false)
+  inventoryOpen   Float?   // מלאי פתיחה
+  costPerUnit     Float?   // עלות קנייה ליחידה
+  minInventory    Float?   // מלאי מינימלי
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  business      Business        @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  salesForecast SalesForecast[]
+}
+
+// מסך 3: כוח אדם (מאקרו)
+model HeadcountRole {
+  id               String   @id @default(cuid())
+  businessId       String
+  name             String   // ניהול, שיווק, תפעול, מזכירות...
+  headcount        Float    @default(0) // תומך בחלקי משרה
+  avgSalary        Float    @default(0)
+  employerCostRate Float    @default(0.175) // עלות מעסיק (17.5%)
+  isActive         Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  business          Business            @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  headcountForecast HeadcountForecast[]
+}
+
+// מסך 4: הוצאות קבועות בסיסיות
+model FixedExpense {
+  id           String   @id @default(cuid())
+  businessId   String
+  name         String   // שכירות, חשמל, רכב, רו"ח...
+  category     String   // admin | finance | operations
+  monthlyAmount Float   @default(0)
+  isEnabled    Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  business        Business              @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  monthlyOverride FixedExpenseOverride[]
+}
+
+// דריסה חודשית להוצאות קבועות (שכבה 3)
+model FixedExpenseOverride {
+  id             String @id @default(cuid())
+  fixedExpenseId String
+  month          Int    // 1-12
+  amount         Float
+
+  fixedExpense FixedExpense @relation(fields: [fixedExpenseId], references: [id], onDelete: Cascade)
+
+  @@unique([fixedExpenseId, month])
+}
+
+// ===========================================
+// שכבה 2: תחזית כמותית + שיווק
+// ===========================================
+
+// מסך 5: תחזית מכירות לכל מוצר
+model SalesForecast {
+  id        String @id @default(cuid())
+  productId String
+  month     Int    // 1-12
+  units     Float  @default(0)
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, month])
+}
+
+// מסך 6: תחזית כ"א - שינויים צפויים
+model HeadcountForecast {
+  id              String @id @default(cuid())
+  headcountRoleId String
+  month           Int    // 1-12
+  headcountChange Int    @default(0)  // +1, -1, 0
+  salaryChange    Float  @default(0)  // אחוז שינוי בשכר (0.08 = 8%)
+
+  headcountRole HeadcountRole @relation(fields: [headcountRoleId], references: [id], onDelete: Cascade)
+
+  @@unique([headcountRoleId, month])
+}
+
+// מסך 7: תקציב שיווק
+model MarketingBudget {
+  id               String   @id @default(cuid())
+  businessId       String
+  month            Int      // 1-12
+  totalBudget      Float    @default(0)
+  // חלוקת ערוצים (באחוזים)
+  googlePercent    Float    @default(0)
+  facebookPercent  Float    @default(0)
+  seoPercent       Float    @default(0)
+  otherPercent     Float    @default(0)
+  // סוכנות
+  hasAgency        Boolean  @default(false)
+  agencyFixedFee   Float    @default(0)
+  agencyPercentFee Float    @default(0)  // אחוז מהתקציב
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@unique([businessId, month])
+}
+
+// ===========================================
+// שכבה 3: פירוט מתקדם
+// ===========================================
+
+// מסך 9: מימון
+model FinancingItem {
+  id           String   @id @default(cuid())
+  businessId   String
+  type         String   // bank_fees | overdraft_interest | cc_fee_rate | loan
+  name         String
+  // לעמלות קבועות
+  monthlyAmount Float?
+  // לאחוזים (עמלת אשראי)
+  percentRate  Float?
+  // להלוואות
+  principal    Float?
+  interestRate Float?
+  startMonth   Int?
+  termMonths   Int?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+}
+
+// ===========================================
+// תוצאות התחזית
+// ===========================================
+
+model ForecastResult {
+  id          String @id @default(cuid())
+  businessId  String
+  month       Int    // 1-12
+  // הכנסות
+  revenue     Float  @default(0)
+  // עלויות ישירות
+  cogs        Float  @default(0)  // Cost of Goods Sold
+  purchases   Float  @default(0)  // רכישות מלאי
+  grossProfit Float  @default(0)
+  // הוצאות תפעוליות
+  payroll     Float  @default(0)
+  marketing   Float  @default(0)
+  admin       Float  @default(0)
+  finance     Float  @default(0)
+  // תוצאות
+  operatingProfit Float @default(0)
+  netProfit       Float @default(0)
+  // תזרים
+  cashFlow    Float  @default(0)
+  bankBalance Float  @default(0)
+  // מטא-דאטה
+  calculatedAt DateTime @default(now())
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@unique([businessId, month])
+}
+
+// ===========================================
+// מעקב התקדמות ב-Wizard
+// ===========================================
+
+model WizardProgress {
+  id           String   @id @default(cuid())
+  businessId   String   @unique
+  currentStep  Int      @default(1)  // 1-10
+  layer1Done   Boolean  @default(false)
+  layer2Done   Boolean  @default(false)
+  layer3Done   Boolean  @default(false)
+  updatedAt    DateTime @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+}
