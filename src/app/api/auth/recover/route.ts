@@ -3,6 +3,8 @@ import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
 import { generateTempPassword } from '@/lib/password-utils'
 
+export const dynamic = 'force-dynamic'
+
 export async function POST(request: NextRequest) {
   try {
     const { email } = await request.json()
